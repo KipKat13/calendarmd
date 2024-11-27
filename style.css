@@ -1,0 +1,109 @@
+/* Catppuccin-inspired Color Palette */
+:root {
+    --rosewater: #f5e0dc;
+    --flamingo: #f2cdcd;
+    --pink: #f5c2e7;
+    --mauve: #cba6f7;
+    --red: #f38ba8;
+    --maroon: #eba0ac;
+    --peach: #fab387;
+    --yellow: #f9e2af;
+    --green: #a6e3a1;
+    --teal: #94e2d5;
+    --sky: #89dceb;
+    --blue: #74c7ec;
+    --lavender: #b4befe;
+    --base: #1e1e2e;
+    --mantle: #181825;
+    --crust: #11111b;
+    --text: #cdd6f4;
+    --subtext1: #bac2de;
+    --subtext0: #a6adc8;
+}
+
+/* Reset & Base Styles */
+html, body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%; /* Ensure the page stretches to the full height of the viewport */
+    font-family: 'Arial', sans-serif;
+    background-color: var(--base);
+    color: var(--text);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+header {
+    text-align: center;
+    padding: 2rem 1rem;
+    background-color: var(--mantle);
+    border-bottom: 2px solid var(--mauve);
+}
+
+header h1 {
+    color: var(--rosewater);
+}
+
+/* Main Section */
+main {
+    flex: 1; /* Makes main content take up the remaining space */
+    padding: 2rem 1rem;
+}
+
+section {
+    margin-bottom: 2rem;
+    background-color: var(--mantle);
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+section h2 {
+    color: var(--mauve);
+}
+
+section p {
+    color: var(--subtext1);
+}
+
+/* Button */
+.cta-button {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    color: var(--crust);
+    background-color: var(--green);
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+    background-color: var(--teal);
+}
+
+/* Footer */
+footer {
+    background-color: var(--crust);
+    color: var(--subtext0);
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.9rem;
+    margin-top: auto; /* Ensures footer stays at the bottom */
+}
+
+/* Footer Link Styles */
+.footer-link {
+    color: var(--pink); /* Matches the Catppuccin palette */
+    text-decoration: none;
+    font-size: 0.9rem;
+    font-weight: bold;
+    transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+    color: var(--mauve);
+}

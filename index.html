@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="A beautiful Catppuccin-themed webpage">
+    <title>Markdown Calendar</title>
+    <link rel="stylesheet" href="style.css">
+    <script>
+        function generateMarkdownTable() {
+            const columnInput = document.getElementById("columns").value;
+            const columns = columnInput.split(",").map(col => col.trim());
+            
+            if (columns.length === 0 || columns[0] === "") {
+                alert("Please enter at least one column name.");
+                return;
+            }
+
+            const headerRow = `| ${columns.join(" | ")} |`;
+            const separatorRow = `| ${columns.map(() => "---").join(" | ")} |`;
+
+            const markdownTable = `${headerRow}\n${separatorRow}`;
+            document.getElementById("output").value = markdownTable;
+        }
+    </script>
+</head>
+<body>
+    <header>
+        <h1>Welcome to the Markdown Calendar Generator!</h1>
+    </header>
+    <main>
+        <section>
+            <h2>Get Started</h2>
+            <p>Enter the column names for your markdown table, separated by commas:</p>
+            <div>
+                <input type="text" id="columns" placeholder="e.g., Date, Task, Status" />
+                <button class="cta-button" onclick="generateMarkdownTable()">Generate</button>
+            </div>
+            <h3>Generated Markdown Table:</h3>
+            <textarea id="output" rows="6" readonly placeholder="Your markdown table will appear here..."></textarea>
+        </section>
+    </main>
+    <footer>
+        <a href="https://github.com/KipKat13" class="footer-link" target="_blank">Crafted with 💖 by KipKat13!</a>
+    </footer>
+</body>
+</html>
