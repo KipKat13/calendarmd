@@ -7,21 +7,99 @@
     <title>Markdown Calendar</title>
     <link rel="stylesheet" href="style.css">
     <script>
-        function generateMarkdownTable() {
-            const columnInput = document.getElementById("columns").value;
-            const columns = columnInput.split(",").map(col => col.trim());
-            
-            if (columns.length === 0 || columns[0] === "") {
-                alert("Please enter at least one column name.");
-                return;
+        document.addEventListener("DOMContentLoaded", () => {
+            const columnInput = document.getElementById("column-input");
+            const columnList = document.getElementById("column-list");
+            const output = document.getElementById("output");
+
+            let draggedItem = null;
+
+            function addColumn() {
+                const columnName = columnInput.value.trim();
+                if (columnName === "") return;
+
+                // Create a list item
+                const listItem = document.createElement("li");
+                listItem.className = "column-item";
+                listItem.draggable = true; // Enable drag-and-drop
+
+                // Add text and delete button
+                listItem.innerHTML = `
+                    <span>${columnName}</span>
+                    <button class="delete-button" onclick="this.parentElement.remove(); updateMarkdownTable();">×</button>
+                `;
+
+                // Drag-and-drop events
+                listItem.addEventListener("dragstart", () => {
+                    draggedItem = listItem;
+                    listItem.classList.add("dragging");
+                });
+
+                listItem.addEventListener("dragend", () => {
+                    draggedItem = null;
+                    listItem.classList.remove("dragging");
+                    updateMarkdownTable(); // Update table after drag-and-drop
+                });
+
+                listItem.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(columnList, e.clientY);
+                    if (afterElement == null) {
+                        columnList.appendChild(draggedItem);
+                    } else {
+                        columnList.insertBefore(draggedItem, afterElement);
+                    }
+                });
+
+                columnList.appendChild(listItem);
+
+                // Clear input and update the table
+                columnInput.value = "";
+                updateMarkdownTable();
             }
 
-            const headerRow = `| ${columns.join(" | ")} |`;
-            const separatorRow = `| ${columns.map(() => "---").join(" | ")} |`;
+            function updateMarkdownTable() {
+                const columns = Array.from(columnList.querySelectorAll(".column-item span")).map(
+                    span => span.textContent
+                );
 
-            const markdownTable = `${headerRow}\n${separatorRow}`;
-            document.getElementById("output").value = markdownTable;
-        }
+                if (columns.length === 0) {
+                    output.value = "Your markdown table will appear here...";
+                    return;
+                }
+
+                const headerRow = `| ${columns.join(" | ")} |`;
+                const separatorRow = `| ${columns.map(() => "---").join(" | ")} |`;
+
+                const markdownTable = `${headerRow}\n${separatorRow}`;
+                output.value = markdownTable;
+            }
+
+            function getDragAfterElement(container, y) {
+                const draggableElements = [...container.querySelectorAll(".column-item:not(.dragging)")];
+
+                return draggableElements.reduce((closest, child) => {
+                    const box = child.getBoundingClientRect();
+                    const offset = y - box.top - box.height / 2;
+                    if (offset < 0 && offset > closest.offset) {
+                        return { offset: offset, element: child };
+                    } else {
+                        return closest;
+                    }
+                }, { offset: Number.NEGATIVE_INFINITY }).element;
+            }
+
+            // Add event listener for input (on Enter key)
+            columnInput.addEventListener("keypress", (e) => {
+                if (e.key === "Enter") {
+                    e.preventDefault();
+                    addColumn();
+                }
+            });
+
+            // Expose function to update markdown table globally
+            window.updateMarkdownTable = updateMarkdownTable;
+        });
     </script>
 </head>
 <body>
@@ -31,11 +109,13 @@
     <main>
         <section>
             <h2>Get Started</h2>
-            <p>Enter the column names for your markdown table, separated by commas:</p>
+            <p>Enter a column name and press Enter. Drag and drop to rearrange columns:</p>
             <div>
-                <input type="text" id="columns" placeholder="e.g., Date, Task, Status" />
-                <button class="cta-button" onclick="generateMarkdownTable()">Generate</button>
+                <input type="text" id="column-input" placeholder="e.g., Date" />
             </div>
+            <ul id="column-list" class="column-list"></ul>
+        </section>
+        <section>
             <h3>Generated Markdown Table:</h3>
             <textarea id="output" rows="6" readonly placeholder="Your markdown table will appear here..."></textarea>
         </section>
