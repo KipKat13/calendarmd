@@ -165,3 +165,8 @@ footer {
     opacity: 0.5;
     cursor: grabbing;
 }
+
+textarea {
+    transition: height 0.2s ease;
+    overflow: hidden; /* Prevent scrollbars */
+}

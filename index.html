@@ -65,6 +65,7 @@
 
                 if (columns.length === 0) {
                     output.value = "Your markdown table will appear here...";
+                    autoResizeTextarea(output);
                     return;
                 }
 
@@ -73,6 +74,13 @@
 
                 const markdownTable = `${headerRow}\n${separatorRow}`;
                 output.value = markdownTable;
+
+                autoResizeTextarea(output); // Dynamically adjust the height
+            }
+
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = "auto"; // Reset the height
+                textarea.style.height = `${textarea.scrollHeight}px`; // Adjust to the scroll height
             }
 
             function getDragAfterElement(container, y) {
