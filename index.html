@@ -10,6 +10,8 @@
         document.addEventListener("DOMContentLoaded", () => {
             const columnInput = document.getElementById("column-input");
             const columnList = document.getElementById("column-list");
+            const dataList = document.getElementById("data-list");
+            const dataInputContainer = document.getElementById("data-input-container");
             const output = document.getElementById("output");
 
             let draggedItem = null;
@@ -18,18 +20,24 @@
                 const columnName = columnInput.value.trim();
                 if (columnName === "") return;
 
-                // Create a list item
+                const listItem = createDraggableItem(columnName, columnList, updateMarkdownTable);
+                columnList.appendChild(listItem);
+                columnInput.value = "";
+
+                updateDataInputs();
+                updateMarkdownTable();
+            }
+
+            function createDraggableItem(text, parentList, onUpdate) {
                 const listItem = document.createElement("li");
                 listItem.className = "column-item";
-                listItem.draggable = true; // Enable drag-and-drop
+                listItem.draggable = true;
 
-                // Add text and delete button
                 listItem.innerHTML = `
-                    <span>${columnName}</span>
-                    <button class="delete-button" onclick="this.parentElement.remove(); updateMarkdownTable();">×</button>
+                    <span>${text}</span>
+                    <button class="delete-button" onclick="this.parentElement.remove(); updateDataInputs(); ${onUpdate.name}();">×</button>
                 `;
 
-                // Drag-and-drop events
                 listItem.addEventListener("dragstart", () => {
                     draggedItem = listItem;
                     listItem.classList.add("dragging");
@@ -38,49 +46,21 @@
                 listItem.addEventListener("dragend", () => {
                     draggedItem = null;
                     listItem.classList.remove("dragging");
-                    updateMarkdownTable(); // Update table after drag-and-drop
+                    updateDataInputs();
+                    onUpdate();
                 });
 
                 listItem.addEventListener("dragover", (e) => {
                     e.preventDefault();
-                    const afterElement = getDragAfterElement(columnList, e.clientY);
+                    const afterElement = getDragAfterElement(parentList, e.clientY);
                     if (afterElement == null) {
-                        columnList.appendChild(draggedItem);
+                        parentList.appendChild(draggedItem);
                     } else {
-                        columnList.insertBefore(draggedItem, afterElement);
+                        parentList.insertBefore(draggedItem, afterElement);
                     }
                 });
 
-                columnList.appendChild(listItem);
-
-                // Clear input and update the table
-                columnInput.value = "";
-                updateMarkdownTable();
-            }
-
-            function updateMarkdownTable() {
-                const columns = Array.from(columnList.querySelectorAll(".column-item span")).map(
-                    span => span.textContent
-                );
-
-                if (columns.length === 0) {
-                    output.value = "Your markdown table will appear here...";
-                    autoResizeTextarea(output);
-                    return;
-                }
-
-                const headerRow = `| ${columns.join(" | ")} |`;
-                const separatorRow = `| ${columns.map(() => "---").join(" | ")} |`;
-
-                const markdownTable = `${headerRow}\n${separatorRow}`;
-                output.value = markdownTable;
-
-                autoResizeTextarea(output); // Dynamically adjust the height
-            }
-
-            function autoResizeTextarea(textarea) {
-                textarea.style.height = "auto"; // Reset the height
-                textarea.style.height = `${textarea.scrollHeight}px`; // Adjust to the scroll height
+                return listItem;
             }
 
             function getDragAfterElement(container, y) {
@@ -97,16 +77,123 @@
                 }, { offset: Number.NEGATIVE_INFINITY }).element;
             }
 
-            // Add event listener for input (on Enter key)
+            function updateDataInputs() {
+                const columns = Array.from(columnList.querySelectorAll(".column-item span")).map(
+                    span => span.textContent
+                );
+
+                // Clear existing inputs
+                dataInputContainer.innerHTML = "";
+
+                if (columns.length === 0) {
+                    const placeholder = document.createElement("p");
+                    placeholder.textContent = "Please define columns first.";
+                    dataInputContainer.appendChild(placeholder);
+                    return;
+                }
+
+                // Add input fields matching columns
+                columns.forEach(columnName => {
+                    const inputField = document.createElement("input");
+                    inputField.type = "text";
+                    inputField.placeholder = columnName;
+                    inputField.dataset.column = columnName;
+                    dataInputContainer.appendChild(inputField);
+                });
+
+                // Add the add row button
+                const addRowButton = document.createElement("button");
+                addRowButton.type = "button";
+                addRowButton.textContent = "Add Row";
+                addRowButton.className = "cta-button";
+                addRowButton.onclick = addDataRow;
+                dataInputContainer.appendChild(addRowButton);
+            }
+
+            function addDataRow() {
+                const inputs = Array.from(dataInputContainer.querySelectorAll("input"));
+                const rowData = inputs.map(input => input.value.trim());
+
+                if (rowData.some(value => value === "")) {
+                    alert("Please fill out all fields before adding a row.");
+                    return;
+                }
+
+                // Create draggable row item
+                const listItem = document.createElement("li");
+                listItem.className = "column-item";
+                listItem.draggable = true;
+
+                listItem.innerHTML = `
+                    <span>${rowData.join(" | ")}</span>
+                    <button class="delete-button" onclick="this.parentElement.remove(); updateMarkdownTable();">×</button>
+                `;
+
+                listItem.addEventListener("dragstart", () => {
+                    draggedItem = listItem;
+                    listItem.classList.add("dragging");
+                });
+
+                listItem.addEventListener("dragend", () => {
+                    draggedItem = null;
+                    listItem.classList.remove("dragging");
+                    updateMarkdownTable();
+                });
+
+                listItem.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    const afterElement = getDragAfterElement(dataList, e.clientY);
+                    if (afterElement == null) {
+                        dataList.appendChild(draggedItem);
+                    } else {
+                        dataList.insertBefore(draggedItem, afterElement);
+                    }
+                });
+
+                dataList.appendChild(listItem);
+
+                // Clear inputs
+                inputs.forEach(input => input.value = "");
+
+                updateMarkdownTable();
+            }
+
+            function updateMarkdownTable() {
+                const columns = Array.from(columnList.querySelectorAll(".column-item span")).map(
+                    span => span.textContent
+                );
+
+                const rows = Array.from(dataList.querySelectorAll(".column-item span")).map(
+                    span => span.textContent.split(" | ")
+                );
+
+                if (columns.length === 0) {
+                    output.value = "Your markdown table will appear here...";
+                    autoResizeTextarea(output);
+                    return;
+                }
+
+                const headerRow = `| ${columns.join(" | ")} |`;
+                const separatorRow = `| ${columns.map(() => "---").join(" | ")} |`;
+                const dataRows = rows.map(row => `| ${row.join(" | ")} |`).join("\n");
+
+                const markdownTable = `${headerRow}\n${separatorRow}\n${dataRows}`;
+                output.value = markdownTable;
+
+                autoResizeTextarea(output);
+            }
+
+            function autoResizeTextarea(textarea) {
+                textarea.style.height = "auto";
+                textarea.style.height = `${textarea.scrollHeight}px`;
+            }
+
             columnInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter") {
                     e.preventDefault();
                     addColumn();
                 }
             });
-
-            // Expose function to update markdown table globally
-            window.updateMarkdownTable = updateMarkdownTable;
         });
     </script>
 </head>
@@ -116,7 +203,7 @@
     </header>
     <main>
         <section>
-            <h2>Get Started</h2>
+            <h2>Define Your Columns</h2>
             <p>Enter a column name and press Enter. Drag and drop to rearrange columns:</p>
             <div>
                 <input type="text" id="column-input" placeholder="e.g., Date" />
@@ -124,8 +211,14 @@
             <ul id="column-list" class="column-list"></ul>
         </section>
         <section>
+            <h2>Manage Your Data</h2>
+            <p>Add data matching your columns. Drag and drop to rearrange rows:</p>
+            <div id="data-input-container"></div>
+            <ul id="data-list" class="column-list"></ul>
+        </section>
+        <section>
             <h3>Generated Markdown Table:</h3>
-            <textarea id="output" rows="6" readonly placeholder="Your markdown table will appear here..."></textarea>
+            <textarea id="output" rows="10" cols="50" readonly placeholder="Your markdown table will appear here..."></textarea>
         </section>
     </main>
     <footer>
