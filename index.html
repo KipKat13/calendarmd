@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="A beautiful Catppuccin-themed webpage">
     <title>Markdown Calendar</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const columnInput = document.getElementById("column-input");
@@ -13,6 +15,7 @@
             const dataList = document.getElementById("data-list");
             const dataInputContainer = document.getElementById("data-input-container");
             const output = document.getElementById("output");
+            const pdfPreview = document.getElementById("pdf-preview");
 
             let draggedItem = null;
 
@@ -158,7 +161,7 @@
                 updateMarkdownTable();
             }
 
-            function updateMarkdownTable() {
+            async function updateMarkdownTable() {
                 const columns = Array.from(columnList.querySelectorAll(".column-item span")).map(
                     span => span.textContent
                 );
@@ -169,7 +172,7 @@
 
                 if (columns.length === 0) {
                     output.value = "Your markdown table will appear here...";
-                    autoResizeTextarea(output);
+                    pdfPreview.src = "";
                     return;
                 }
 
@@ -180,13 +183,46 @@
                 const markdownTable = `${headerRow}\n${separatorRow}\n${dataRows}`;
                 output.value = markdownTable;
 
-                autoResizeTextarea(output);
+                updatePDFPreview(columns, rows);
             }
 
-            function autoResizeTextarea(textarea) {
-                textarea.style.height = "auto";
-                textarea.style.height = `${textarea.scrollHeight}px`;
+            async function updatePDFPreview(columns, rows) {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+
+                // Check if there are columns and rows to display
+                if (columns.length === 0) {
+                    doc.text("No data to display. Please add columns and rows.", 10, 10);
+                } else {
+                    // Format the rows for jsPDF's table method
+                    const tableBody = rows.map(row => {
+                        const rowData = {};
+                        columns.forEach((col, index) => {
+                            rowData[col] = row[index] || "";
+                        });
+                        return rowData;
+                    });
+
+                    // Prepare the table headers and body for jsPDF
+                    const headers = columns.map(col => ({ title: col, dataKey: col }));
+
+                    // Render the table with jsPDF's autoTable plugin
+                    doc.autoTable({
+                        head: [headers],
+                        body: tableBody,
+                        startY: 10, // Starting position of the table
+                        theme: "grid", // Add lines between rows and columns
+                        headStyles: { fillColor: [148, 0, 211] }, // Custom header style (purple)
+                        bodyStyles: { textColor: [50, 50, 50] }, // Body text styling
+                    });
+                }
+
+                // Generate a preview URL for the PDF
+                const pdfURL = doc.output("bloburl");
+                pdfPreview.src = pdfURL;
             }
+
+
 
             columnInput.addEventListener("keypress", (e) => {
                 if (e.key === "Enter") {
@@ -197,6 +233,7 @@
         });
     </script>
 </head>
+
 <body>
     <header>
         <h1>Welcome to the Markdown Calendar Generator!</h1>
@@ -217,12 +254,20 @@
             <ul id="data-list" class="column-list"></ul>
         </section>
         <section>
-            <h3>Generated Markdown Table:</h3>
-            <textarea id="output" rows="10" cols="50" readonly placeholder="Your markdown table will appear here..."></textarea>
+            <h2>Generated Markdown Table:</h2>
+            <textarea id="output" rows="6" readonly placeholder="Your markdown table will appear here..."></textarea>
+        </section>
+        <section>
+            <h2>PDF Preview:</h2>
+            <iframe id="pdf-preview" style="width:100%; height:400px; border:1px solid #ccc;"></iframe>
         </section>
     </main>
     <footer>
         <a href="https://github.com/KipKat13" class="footer-link" target="_blank">Crafted with 💖 by KipKat13!</a>
     </footer>
 </body>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
+
 </html>
